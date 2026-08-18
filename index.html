@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GlowCream — Natural Skin Cream</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <div class="brand-wrap">
+          <a href="/" class="logo" aria-label="Mine Glow Organics">
+            <img src="assets/logo.png" alt="Mine Glow Organics" class="logo-img" onerror="this.style.display='none'; this.parentElement.classList.add('logo-fallback')">
+          </a>
+          <div>
+            <div class="brand">Mine Glow Organics</div>
+            <div class="tag">Natural glow, every night</div>
+          </div>
+        </div>
+        <nav class="nav">
+          <a href="#products" class="nav-link">Products</a>
+          <a href="#testimonials" class="nav-link">Reviews</a>
+          <button id="cartButton" class="cart-btn">Cart (<span id="cartCount">0</span>)</button>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero container">
+        <div class="hero-card">
+          <div class="hero-left">
+            <h2>Glow from the inside out</h2>
+            <p class="lead">A silky lightweight cream that nourishes, brightens and protects. Fast-absorbing with a natural dewy finish.</p>
+            <div class="hero-cta">
+              <button id="shopNow" class="add-btn">Shop Best Seller</button>
+              <a class="ghost" href="#products">See all products</a>
+            </div>
+            <div class="trust" style="margin-top:1rem;display:flex;gap:1rem;align-items:center;color:var(--muted)">
+              <div style="display:flex;align-items:center;gap:.5rem"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2l2.9 5.88L21 9.24l-4.5 4.09L17.8 21 12 17.77 6.2 21l1.3-7.67L3 9.24l6.1-1.36L12 2z" fill="#FFD166"/></svg><span>4.8 ★  — 2k+ reviews</span></div>
+              <div style="display:flex;align-items:center;gap:.5rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" stroke="#ddd" stroke-width="1.2"/></svg><span>Cruelty-free</span></div>
+            </div>
+            <ul class="features">
+              <li>✓ Paraben-free</li>
+              <li>✓ Dermatologist-tested</li>
+              <li>✓ Naturally derived ingredients</li>
+            </ul>
+          </div>
+          <div class="hero-right">
+            <div class="packshot">
+              <img src="https://images.unsplash.com/photo-1512428559087-560fa5ceab42?auto=format&fit=crop&w=900&q=80" alt="GlowCream jar">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="container" id="products">
+        <h3 class="section-title">Our Products</h3>
+        <div id="productsGrid" class="products grid"></div>
+        <div class="product-showcase">
+          <div class="showcase-media">
+            <img id="showcaseMain" src="assets/01_front_product.jpg" alt="Product image" />
+          </div>
+          <div class="showcase-thumbs" id="showcaseThumbs"></div>
+        </div>
+      </section>
+
+      <section class="container" id="testimonials">
+        <h3 class="section-title">What customers say</h3>
+        <div class="testimonials">
+          <blockquote>"Skin looks brighter after 1 week — love this cream!" <cite>— Aisha</cite></blockquote>
+          <blockquote>"Light, non-greasy and smells wonderful." <cite>— Meera</cite></blockquote>
+        </div>
+      </section>
+    </main>
+
+    <aside id="cartPanel" class="cart-panel">
+      <div class="cart-header">
+        <h3>Your Cart</h3>
+        <button id="closeCart" class="close">✕</button>
+      </div>
+      <div id="cartItems" class="cart-items"></div>
+      <div class="cart-footer">
+        <div class="total">Total: <span id="cartTotal">₹0.00</span></div>
+        <button id="whatsappOrder" class="whatsapp-btn">Order via WhatsApp</button>
+      </div>
+    </aside>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <div>
+          <strong>GlowCream</strong>
+          <div class="muted">Natural radiance for all skin types</div>
+        </div>
+        <div class="footer-links muted">Contact · Terms · Privacy</div>
+      </div>
+    </footer>
+
+    <!-- Order confirmation modal -->
+    <div id="orderModal" class="modal" aria-hidden="true">
+      <div class="modal-panel">
+        <h3>Confirm your order</h3>
+        <div class="modal-row"><label>Name</label><input id="orderName" type="text" placeholder="Your name"></div>
+        <div class="modal-row"><label>Your phone</label><input id="orderPhone" type="tel" placeholder="e.g. 919876543210"></div>
+        <div class="modal-row"><label>Delivery address</label><input id="orderAddress" type="text" placeholder="House, street, city"></div>
+        <div class="modal-row"><label>Notes</label><textarea id="orderNotes" rows="3" placeholder="Any delivery notes (optional)"></textarea></div>
+        <div class="modal-row small"><label>Send to store WhatsApp number</label><input id="orderStoreNumber" type="text" placeholder="Store WhatsApp number (country code, no +)" value="PHONENUMBER"></div>
+        <div class="modal-actions"><button id="orderConfirm" class="add-btn">Send to WhatsApp</button><button id="orderCancel" class="add-btn ghost">Cancel</button></div>
+      </div>
+    </div>
+    <script src="script.js"></script>
+  </body>
+</html>

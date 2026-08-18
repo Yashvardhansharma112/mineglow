@@ -1,0 +1,12 @@
+{
+  "name": "mineglow-storefront",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "optimize-images": "node scripts/optimize-images.js",
+    "import-logo": "node scripts/import-logo.js"
+  },
+  "dependencies": {
+    "sharp": "^0.32.0"
+  }
+}
