@@ -4,7 +4,7 @@ This is a lightweight static storefront to sell a cream product with Razorpay on
 
 Customer accounts
 
-Customers can register with a name, email, phone number, and password, sign in, and view orders placed while signed in. Guest checkout remains available, but guest orders cannot be shown in account history. Account and order APIs run from `server.js`; the old `server.ps1` static server does not provide these features.
+Customers can register with a name, email, phone number, and password, sign in, and view orders placed while signed in. Guest checkout remains available, but guest orders cannot be shown in account history. Account and order APIs run from `backend.js`; the old `server.ps1` static server does not provide these features.
 
 Forgot password creates a single-use link valid for 15 minutes. In local development, the link is printed by `server.js` and opened automatically by the demo UI. Configure a transactional email provider before production; never return reset tokens from the production API.
 
@@ -17,7 +17,7 @@ Configuration
 
 - Edit `script.js` and replace `RAZORPAY_KEY_ID` with your Razorpay **Key ID** from Dashboard > Account & Settings > API Keys. The current value is a test key.
 - Never put the Razorpay Key Secret in `script.js` or any browser-delivered file.
-- Razorpay order creation and signature verification are handled by `server.js`. For production, persist pending/paid orders in a database and move email/order notifications to the server.
+- Razorpay order creation and signature verification are handled by `backend.js`. For production, persist pending/paid orders in a database and move email/order notifications to the server.
 - WhatsApp remains available as customer support through the footer link; it is not the payment flow.
 - You can change the product details in the `PRODUCTS` array inside `script.js`.
 Place your brand logo image (the one you provided) into `assets/originals/` and name it `logo.png` (or `logo.jpg` / `logo-source.jpg`). Then run the import helper to generate optimized logo files used by the site.
@@ -89,8 +89,8 @@ $env:RAZORPAY_KEY_SECRET = 'your_test_secret'
 npm start
 ```
 
-Then open `http://localhost:5500/`. The Razorpay secret is read only by `server.js` and is never sent to the browser.
+Then open `http://localhost:5500/`. The Razorpay secret is read only by `backend.js` and is never sent to the browser.
 
-GitHub Pages only hosts static files and cannot run the payment API. Deploy `server.js` on a Node host such as Render, Railway, or a serverless platform, set `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET` there, and configure the frontend API base URL before production deployment.
+GitHub Pages only hosts static files and cannot run the payment API. Deploy `backend.js` on a Node host such as Render, Railway, or a serverless platform, set `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET` there, and configure the frontend API base URL before production deployment.
 
 The server writes account and order data to `data/store.json`. Keep the `data/` directory private and use a managed database, persistent disk, HTTPS, rate limiting, and session storage appropriate for production traffic.

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "start": "node server.js",
+    "start": "node backend.js",
     "vercel-build": "echo Vercel serverless build ready",
     "optimize-images": "node scripts/optimize-images.js",
     "import-logo": "node scripts/import-logo.js"
