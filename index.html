@@ -3,118 +3,762 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#f08aa5" />
-    <meta name="description" content="Mine Glow Organics - Premium natural night cream for glowing skin. Order directly via WhatsApp." />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <title>GlowCream — Natural Skin Cream</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    <meta name="theme-color" content="#8B3A4F" />
+    <meta name="description" content="Mine Glow Organics - Luxury cold-pressed botanical night cream for radiant, glowing skin. 100% organic, dermatologist tested with Cash on Delivery." />
+    <title>Mine Glow Organics — Botanical Night Radiance Cream</title>
+    <!-- Google Fonts: Editorial Playfair Display + Modern Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <!-- Razorpay Checkout SDK -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   </head>
   <body>
-    <header class="site-header">
+
+    <!-- Luxury Top Announcement Bar -->
+    <div class="top-announcement">
+      <div class="announcement-track">
+        <span>✨ 100% Pure Cold-Pressed Botanicals</span>
+        <span class="dot">•</span>
+        <span>🚚 Free Express Shipping on Orders Above ₹999</span>
+        <span class="dot">•</span>
+        <span>💵 Cash on Delivery (COD) Available Across India</span>
+        <span class="dot">•</span>
+        <span>🌿 Cruelty-Free &amp; Dermatologically Approved</span>
+      </div>
+    </div>
+
+    <!-- Sticky Glass Navigation Header -->
+    <header class="site-header" id="siteHeader">
       <div class="container header-inner">
-        <div class="brand-wrap">
-          <a href="/" class="logo" aria-label="Mine Glow Organics">
+        <a href="#" class="brand-wrap" aria-label="Mine Glow Organics Home">
+          <div class="logo-circle">
             <img src="assets/logo.png" alt="Mine Glow Organics" class="logo-img" onerror="this.style.display='none'; this.parentElement.classList.add('logo-fallback')">
-          </a>
-          <div>
-            <div class="brand">Mine Glow Organics</div>
-            <div class="tag">Natural glow, every night</div>
+            <span class="logo-fallback-text">MG</span>
           </div>
-        </div>
-        <nav class="nav">
-          <a href="#products" class="nav-link">Products</a>
+          <div class="brand-text">
+            <span class="brand-name">Mine Glow</span>
+            <span class="brand-sub">ORGANICS</span>
+          </div>
+        </a>
+
+        <nav class="nav" id="mainNav">
+          <a href="#hero" class="nav-link">Home</a>
+          <a href="#products" class="nav-link">Shop Products</a>
+          <a href="#ingredients" class="nav-link">Ingredients</a>
+          <a href="#ritual" class="nav-link">How to Use</a>
           <a href="#testimonials" class="nav-link">Reviews</a>
-          <button id="cartButton" class="cart-btn">Cart (<span id="cartCount">0</span>)</button>
+          <a href="#faq" class="nav-link">FAQ</a>
         </nav>
+
+        <div class="header-actions">
+          <button id="accountButton" class="account-trigger" aria-label="Open account" onclick="openAccount();">Account</button>
+          <button id="cartButton" class="cart-trigger" aria-label="Open shopping bag" onclick="openCart();">
+            <svg class="bag-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <path d="M16 10a4 4 0 0 1-8 0"></path>
+            </svg>
+            <span class="cart-label">Bag</span>
+            <span id="cartCount" class="cart-count-badge">0</span>
+          </button>
+        </div>
       </div>
     </header>
 
+    <div id="accountModal" class="modal" aria-hidden="true">
+      <div class="modal-backdrop" onclick="closeAccount();"></div>
+      <div class="modal-panel account-panel">
+        <div class="modal-header"><div><h3>Your Account</h3><p class="modal-sub">Manage your profile and order history</p></div><button type="button" class="close-modal" aria-label="Close account" onclick="closeAccount();">✕</button></div>
+        <div id="accountContent"></div>
+      </div>
+    </div>
+
     <main>
-      <section class="hero container">
-        <div class="hero-card">
-          <div class="hero-left">
-            <h2>Glow from the inside out</h2>
-            <p class="lead">A silky lightweight cream that nourishes, brightens and protects. Fast-absorbing with a natural dewy finish.</p>
-            <div class="hero-cta">
-              <button id="shopNow" class="add-btn">Shop Best Seller</button>
-              <a class="ghost" href="#products">See all products</a>
+      <!-- Hero Section -->
+      <section class="hero-section" id="hero">
+        <div class="hero-ambient-glow"></div>
+        <div class="container hero-container">
+          <div class="hero-content">
+            <div class="eyebrow-pill">
+              <span class="sparkle">✨</span>
+              <span>100% PURE BOTANICAL NIGHT ELIXIR</span>
             </div>
-            <div class="trust" style="margin-top:1rem;display:flex;gap:1rem;align-items:center;color:var(--muted)">
-              <div style="display:flex;align-items:center;gap:.5rem"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2l2.9 5.88L21 9.24l-4.5 4.09L17.8 21 12 17.77 6.2 21l1.3-7.67L3 9.24l6.1-1.36L12 2z" fill="#FFD166"/></svg><span>4.8 ★  — 2k+ reviews</span></div>
-              <div style="display:flex;align-items:center;gap:.5rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" stroke="#ddd" stroke-width="1.2"/></svg><span>Cruelty-free</span></div>
+            <h1 class="hero-headline">
+              Wake Up to <span class="italic-serif">Lit-From-Within</span> Radiant Skin
+            </h1>
+            <p class="hero-description">
+              A velvety, fast-absorbing night cream infused with pure Kashmiri Saffron, Bakuchiol, and Hyaluronic Acid. Restores deep moisture, evens complexion, and reveals your natural morning glow.
+            </p>
+
+            <!-- Social Proof Bar -->
+            <div class="hero-social-proof">
+              <div class="avatar-stack">
+                <span class="avatar av-1">🌸</span>
+                <span class="avatar av-2">✨</span>
+                <span class="avatar av-3">🌿</span>
+                <span class="avatar av-4">💫</span>
+              </div>
+              <div class="proof-text">
+                <div class="stars">★★★★★ <span class="rating-num">4.9 / 5</span></div>
+                <div class="review-count">Trusted by 2,400+ glowing customers</div>
+              </div>
             </div>
-            <ul class="features">
-              <li>✓ Paraben-free</li>
-              <li>✓ Dermatologist-tested</li>
-              <li>✓ Naturally derived ingredients</li>
-            </ul>
+
+            <!-- CTAs -->
+            <div class="hero-actions">
+              <button id="shopNow" class="btn btn-primary btn-glow">
+                <span>Shop Best Seller</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+              </button>
+              <a href="#ingredients" class="btn btn-outline">
+                <span>Explore Ingredients</span>
+              </a>
+            </div>
+
+            <!-- Hero Highlights / COD Badge -->
+            <div class="hero-highlights">
+              <div class="highlight-item">
+                <span class="check-icon">✓</span>
+                <span>Cash on Delivery Available</span>
+              </div>
+              <div class="highlight-item">
+                <span class="check-icon">✓</span>
+                <span>Dermatologically Tested</span>
+              </div>
+              <div class="highlight-item">
+                <span class="check-icon">✓</span>
+                <span>Zero Harsh Chemicals</span>
+              </div>
+            </div>
           </div>
-          <div class="hero-right">
-            <div class="packshot">
-              <img src="assets/03_box_and_jar.jpg" alt="Mine Glow Organics Night Cream">
+
+          <!-- Hero Media Card -->
+          <div class="hero-visual">
+            <div class="hero-image-frame">
+              <div class="image-spotlight"></div>
+              <img src="assets/03_box_and_jar.jpg" alt="Mine Glow Organics Night Cream Box and Jar" class="hero-main-img" id="heroPackshot">
+              
+              <!-- Floating Feature Badges -->
+              <div class="float-badge float-top-right">
+                <span class="badge-icon">🌿</span>
+                <div>
+                  <div class="float-title">100% Organic</div>
+                  <div class="float-sub">Cold-Pressed Elixir</div>
+                </div>
+              </div>
+
+              <div class="float-badge float-bottom-left">
+                <span class="badge-icon">💵</span>
+                <div>
+                  <div class="float-title">Cash on Delivery</div>
+                  <div class="float-sub">Pay at Your Doorstep</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section class="container" id="products">
-        <h3 class="section-title">Our Products</h3>
-        <div id="productsGrid" class="products grid"></div>
-        <div class="product-showcase">
-          <div class="showcase-media">
-            <img id="showcaseMain" src="assets/01_front_product.jpg" alt="Product image" />
+      <!-- Trust Pillars Bar -->
+      <section class="trust-bar-section">
+        <div class="container">
+          <div class="trust-grid">
+            <div class="trust-card">
+              <div class="trust-icon-box">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+              </div>
+              <div class="trust-info">
+                <h4>100% Organic &amp; Vegan</h4>
+                <p>Pure botanical extracts, paraben-free &amp; cruelty-free.</p>
+              </div>
+            </div>
+
+            <div class="trust-card">
+              <div class="trust-icon-box">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="m9 12 2 2 4-4"></path></svg>
+              </div>
+              <div class="trust-info">
+                <h4>Dermatologist Tested</h4>
+                <p>Safe &amp; nourishing for sensitive, dry &amp; combination skin.</p>
+              </div>
+            </div>
+
+            <div class="trust-card">
+              <div class="trust-icon-box">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+              </div>
+              <div class="trust-info">
+                <h4>Cash on Delivery (COD)</h4>
+                <p>Pay easily in cash upon delivery at no extra charge.</p>
+              </div>
+            </div>
+
+            <div class="trust-card">
+              <div class="trust-icon-box">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+              </div>
+              <div class="trust-info">
+                <h4>Express Dispatch</h4>
+                <p>Fast 2-4 days insured shipping across all pin codes.</p>
+              </div>
+            </div>
           </div>
-          <div class="showcase-thumbs" id="showcaseThumbs"></div>
         </div>
       </section>
 
-      <section class="container" id="testimonials">
-        <h3 class="section-title">What customers say</h3>
-        <div class="testimonials">
-          <blockquote>"My skin texture has improved so much in just 2 weeks. The cream absorbs quickly and doesn't leave any residue." <cite>— Priya Sharma, Mumbai</cite></blockquote>
-          <blockquote>"Perfect for sensitive skin. I've tried many brands but this one doesn't irritate my skin at all." <cite>— Ananya Kapoor, Delhi</cite></blockquote>
-          <blockquote>"The natural ingredients really make a difference. My dark spots have faded and my skin feels hydrated." <cite>— Kavya Nair, Bangalore</cite></blockquote>
-          <blockquote>"Lightweight, effective, and the jar lasts forever. Best value for money!" <cite>— Ritu Patel, Pune</cite></blockquote>
+      <!-- Products Catalog Section -->
+      <section class="products-section" id="products">
+        <div class="container">
+          <div class="section-header text-center">
+            <span class="section-tag">THE RADIANCE COLLECTION</span>
+            <h2 class="section-title">Select Your Night Care Ritual</h2>
+            <p class="section-subtitle">Choose from travel-friendly jars to our best-value deluxe sizes.</p>
+          </div>
+
+          <div id="productsGrid" class="products-grid">
+            <!-- Dynamic products rendered via script.js -->
+          </div>
+
+          <!-- Studio Media Showcase -->
+          <div class="showcase-card">
+            <div class="showcase-header">
+              <span class="showcase-tag">TEXTURE &amp; CRAFTSMANSHIP</span>
+              <h3 class="showcase-title">Sensory Night Skincare Experience</h3>
+              <p class="showcase-desc">Click thumbnails below to explore the silky formulation, luxurious packaging, and certified botanical benefits.</p>
+            </div>
+            
+            <div class="showcase-content">
+              <div class="showcase-media-box">
+                <img id="showcaseMain" src="assets/01_front_product.jpg" alt="Mine Glow Organics Night Cream Texture" class="showcase-main-img">
+              </div>
+              <div class="showcase-sidebar">
+                <div class="showcase-thumbs" id="showcaseThumbs">
+                  <!-- Generated via script.js -->
+                </div>
+                <div class="showcase-features-list">
+                  <div class="s-feature">
+                    <span class="s-icon">✨</span>
+                    <div>
+                      <strong>Silky, Non-Greasy Feel</strong>
+                      <p>Melts seamlessly into skin without leaving any pillow residue.</p>
+                    </div>
+                  </div>
+                  <div class="s-feature">
+                    <span class="s-icon">💧</span>
+                    <div>
+                      <strong>24-Hour Moisture Lock</strong>
+                      <p>Prevents overnight transepidermal water loss.</p>
+                    </div>
+                  </div>
+                  <div class="s-feature">
+                    <span class="s-icon">🌸</span>
+                    <div>
+                      <strong>Fades Dark Spots &amp; Pigmentation</strong>
+                      <p>Brightens dull uneven patches for a luminous complexion.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- "Why It Works" Ingredients & Science Section -->
+      <section class="ingredients-section" id="ingredients">
+        <div class="container">
+          <div class="section-header text-center">
+            <span class="section-tag">BOTANICAL SCIENCE</span>
+            <h2 class="section-title">Pure Ingredients, Proven Results</h2>
+            <p class="section-subtitle">Crafted with high-performance ayurvedic actives &amp; dermatological powerhouses.</p>
+          </div>
+
+          <div class="ingredients-grid">
+            <div class="ingredient-card">
+              <div class="ing-badge">Key Botanical</div>
+              <div class="ing-icon">🌸</div>
+              <h3>Kashmiri Saffron</h3>
+              <p>Rich in antioxidants and crocin, it revitalizes skin cells, lightens hyperpigmentation, and imparts a natural golden glow.</p>
+              <div class="ing-benefit">✓ Radiance &amp; Tone Correction</div>
+            </div>
+
+            <div class="ingredient-card featured">
+              <div class="ing-badge gold">Plant Retinol</div>
+              <div class="ing-icon">🌿</div>
+              <h3>Natural Bakuchiol</h3>
+              <p>The gentle, plant-based alternative to Retinol that speeds cellular turnover, softens fine lines, and firms skin without irritation or peeling.</p>
+              <div class="ing-benefit">✓ Collagen Boost &amp; Anti-Aging</div>
+            </div>
+
+            <div class="ingredient-card">
+              <div class="ing-badge">Hydration Lock</div>
+              <div class="ing-icon">💧</div>
+              <h3>Hyaluronic Acid</h3>
+              <p>Penetrates deep into dermal layers to bind up to 1000x its weight in water, leaving skin plump, dewy, and thoroughly replenished.</p>
+              <div class="ing-benefit">✓ Multi-Depth Moisture</div>
+            </div>
+
+            <div class="ingredient-card">
+              <div class="ing-badge">Barrier Shield</div>
+              <div class="ing-icon">🛡️</div>
+              <h3>Niacinamide 2% &amp; Vitamin E</h3>
+              <p>Fortifies the protective lipid barrier, minimizes open pores, and calms redness from environmental stressors.</p>
+              <div class="ing-benefit">✓ Pore Refining &amp; Repair</div>
+            </div>
+          </div>
+
+          <!-- Clinical Results Banner -->
+          <div class="results-banner">
+            <div class="results-title-box">
+              <h3>What To Expect</h3>
+              <p>Consistent nightly use supports a simple, nourishing skincare ritual.</p>
+            </div>
+            <div class="results-stats">
+              <div class="stat-item">
+                <div class="stat-num">01</div>
+                <div class="stat-desc">Clean, dry skin before application</div>
+              </div>
+              <div class="stat-divider"></div>
+              <div class="stat-item">
+                <div class="stat-num">02</div>
+                <div class="stat-desc">Use a pearl-sized amount each night</div>
+              </div>
+              <div class="stat-divider"></div>
+              <div class="stat-item">
+                <div class="stat-num">03</div>
+                <div class="stat-desc">Massage gently across face and neck</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- The 3-Step Night Ritual -->
+      <section class="ritual-section" id="ritual">
+        <div class="container">
+          <div class="section-header text-center">
+            <span class="section-tag">DAILY APPLICATION</span>
+            <h2 class="section-title">The 3-Step Night Ritual</h2>
+            <p class="section-subtitle">Maximise your nighttime skin renewal in just 60 seconds.</p>
+          </div>
+
+          <div class="ritual-grid">
+            <div class="ritual-step">
+              <div class="step-number">01</div>
+              <div class="step-icon">🫧</div>
+              <h3>Cleanse</h3>
+              <p>Gently wash your face with a mild cleanser and pat dry with a soft towel.</p>
+            </div>
+
+            <div class="ritual-step active">
+              <div class="step-number">02</div>
+              <div class="step-icon">✨</div>
+              <h3>Apply</h3>
+              <p>Take a pearl-sized amount of Mine Glow Night Cream onto your clean fingertips.</p>
+            </div>
+
+            <div class="ritual-step">
+              <div class="step-number">03</div>
+              <div class="step-icon">🌙</div>
+              <h3>Massage &amp; Glow</h3>
+              <p>Smooth across face &amp; neck in upward circular motions. Sleep and wake up radiant!</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Testimonials / Real Customer Reviews -->
+      <section class="testimonials-section" id="testimonials">
+        <div class="container">
+          <div class="section-header text-center">
+                <span class="section-tag">CUSTOMER REVIEWS</span>
+            <h2 class="section-title">Loved by Thousands</h2>
+            <p class="section-subtitle">Customer feedback from across India.</p>
+          </div>
+
+          <div class="testimonials-grid">
+            <div class="review-card">
+              <div class="review-top">
+                <div class="review-stars">★★★★★</div>
+                <span class="verified-tag">Customer review</span>
+              </div>
+              <p class="review-quote">"My skin texture changed completely in just 2 weeks! It is so lightweight, doesn't cause breakouts, and gives a glass-skin morning glow. Ordering my second 50g jar now!"</p>
+              <div class="review-author">
+                <div class="author-avatar">PS</div>
+                <div>
+                  <strong>Priya Sharma</strong>
+                  <div class="author-location">Mumbai • <em>Combination Skin</em></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="review-card">
+              <div class="review-top">
+                <div class="review-stars">★★★★★</div>
+                <span class="verified-tag">Customer review</span>
+              </div>
+              <p class="review-quote">"I have extremely sensitive skin that reacts to almost everything. Mine Glow has zero burning or redness. The Cash on Delivery option made ordering super easy on WhatsApp!"</p>
+              <div class="review-author">
+                <div class="author-avatar">AK</div>
+                <div>
+                  <strong>Ananya Kapoor</strong>
+                  <div class="author-location">Delhi • <em>Sensitive Skin</em></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="review-card">
+              <div class="review-top">
+                <div class="review-stars">★★★★★</div>
+                <span class="verified-tag">Customer review</span>
+              </div>
+              <p class="review-quote">"My post-acne dark spots have faded significantly. It smells like pure natural saffron and feels so luxurious. Best night cream I have ever purchased."</p>
+              <div class="review-author">
+                <div class="author-avatar">KN</div>
+                <div>
+                  <strong>Kavya Nair</strong>
+                  <div class="author-location">Bangalore • <em>Dry Skin</em></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="review-card">
+              <div class="review-top">
+                <div class="review-stars">★★★★★</div>
+                <span class="verified-tag">Customer review</span>
+              </div>
+              <p class="review-quote">"A little goes a long way. The 30g jar easily lasted me 5 weeks. Delivery was quick and the packaging is gorgeous. Highly recommended!"</p>
+              <div class="review-author">
+                <div class="author-avatar">RP</div>
+                <div>
+                  <strong>Ritu Patel</strong>
+                  <div class="author-location">Pune • <em>Normal Skin</em></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FAQ Section -->
+      <section class="faq-section" id="faq">
+        <div class="container">
+          <div class="section-header text-center">
+            <span class="section-tag">FREQUENTLY ASKED</span>
+            <h2 class="section-title">Got Questions? We’re Here to Help</h2>
+            <p class="section-subtitle">Everything you need to know about our formula, delivery &amp; payments.</p>
+          </div>
+
+          <div class="faq-accordion-container">
+            <div class="faq-item">
+              <button class="faq-question" aria-expanded="false">
+                <span>Is Cash on Delivery (COD) available for my location?</span>
+                <span class="faq-icon">+</span>
+              </button>
+              <div class="faq-answer">
+                <p>Yes! We offer Cash on Delivery (COD) across 25,000+ pin codes all over India with zero extra fees. You can pay cash directly to the delivery courier when your package arrives.</p>
+              </div>
+            </div>
+
+            <div class="faq-item">
+              <button class="faq-question" aria-expanded="false">
+                <span>Is this cream suitable for oily and acne-prone skin?</span>
+                <span class="faq-icon">+</span>
+              </button>
+              <div class="faq-answer">
+                <p>Yes. Mine Glow Night Cream is specially formulated to be non-comedogenic (won't clog pores). It absorbs rapidly into the skin with a weightless finish, balancing natural sebum production.</p>
+              </div>
+            </div>
+
+            <div class="faq-item">
+              <button class="faq-question" aria-expanded="false">
+                <span>How soon will I see visible results?</span>
+                <span class="faq-icon">+</span>
+              </button>
+              <div class="faq-answer">
+                <p>Most customers notice deeply hydrated, plump skin from Night 1. Visible reduction in dark spots, improved firmness, and even skin radiance typically emerge within 10 to 14 days of nightly use.</p>
+              </div>
+            </div>
+
+            <div class="faq-item">
+              <button class="faq-question" aria-expanded="false">
+                <span>How do I complete my online order?</span>
+                <span class="faq-icon">+</span>
+              </button>
+              <div class="faq-answer">
+                <p>Select your desired product size, add it to your Bag, enter your delivery details, and choose Razorpay or Cash on Delivery. Support and dispatch updates are available through WhatsApp.</p>
+              </div>
+            </div>
+
+            <div class="faq-item">
+              <button class="faq-question" aria-expanded="false">
+                <span>Are there any parabens, sulphates, or artificial perfumes?</span>
+                <span class="faq-icon">+</span>
+              </button>
+              <div class="faq-answer">
+                <p>Never. Our formula is 100% free of parabens, phthalates, synthetic mineral oils, and harsh fragrances. We only use natural botanical extracts.</p>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
     </main>
 
-    <aside id="cartPanel" class="cart-panel">
+    <!-- Luxury Slide-out Cart Drawer -->
+    <div id="cartBackdrop" class="cart-backdrop" onclick="closeCart();"></div>
+    <aside id="cartPanel" class="cart-panel" aria-label="Shopping Cart">
       <div class="cart-header">
-        <h3>Your Cart</h3>
-        <button id="closeCart" class="close">✕</button>
+        <div class="cart-title-wrap">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+          <h3>Your Shopping Bag</h3>
+        </div>
+        <button id="closeCart" class="close-cart-btn" aria-label="Close cart" onclick="closeCart();">✕</button>
       </div>
-      <div id="cartItems" class="cart-items"></div>
+
+      <!-- Free Shipping Progress Tracker -->
+      <div class="shipping-tracker" id="shippingTracker">
+        <div class="tracker-text" id="trackerText">Add ₹999 more for Free Express Shipping! 🚚</div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progressFill" style="width: 50%;"></div>
+        </div>
+      </div>
+
+      <div id="cartItems" class="cart-items">
+        <!-- Rendered via script.js -->
+      </div>
+
       <div class="cart-footer">
-        <div class="total">Total: <span id="cartTotal">₹0.00</span></div>
-        <button id="whatsappOrder" class="whatsapp-btn">Order via WhatsApp</button>
+        <div class="cart-delivery-info" id="cartDeliveryInfo">
+          <span class="delivery-icon">🚚</span>
+          <span id="cartDeliveryText">Free Delivery on orders above ₹999</span>
+        </div>
+        <div class="cart-summary-row">
+          <span class="subtotal-label">Subtotal</span>
+          <span id="cartSubtotal" class="total-amount">₹0.00</span>
+        </div>
+        <button id="checkoutBtn" type="button" class="btn btn-primary btn-full btn-glow" onclick="openOrderModal();">
+          <span>Proceed to Checkout ➔</span>
+        </button>
       </div>
     </aside>
 
-    <footer class="site-footer">
-      <div class="container footer-inner">
-        <div>
-          <strong>GlowCream</strong>
-          <div class="muted">Natural radiance for all skin types</div>
+    <!-- Luxury Direct Checkout Modal -->
+    <div id="orderModal" class="modal" aria-hidden="true">
+      <div class="modal-backdrop" id="modalBackdrop" onclick="closeOrderModal();"></div>
+      <div class="modal-panel">
+        <div class="modal-header">
+          <div>
+            <h3>Delivery &amp; Payment</h3>
+            <p class="modal-sub">Enter your details to complete your order</p>
+          </div>
+          <button id="modalCloseBtn" type="button" class="close-modal" aria-label="Close modal" onclick="closeOrderModal();">✕</button>
         </div>
-        <div class="footer-links muted">Contact · Terms · Privacy</div>
+
+        <form id="orderForm" onsubmit="event.preventDefault(); confirmOrderAndSend();">
+          <div class="modal-row">
+            <label for="orderName">Full Name <span class="required">*</span></label>
+            <input id="orderName" type="text" placeholder="e.g. Priya Sharma" required>
+          </div>
+
+          <div class="modal-row">
+            <label for="orderPhone">Phone Number <span class="required">*</span></label>
+            <input id="orderPhone" type="tel" inputmode="tel" pattern="\+?[0-9]{10,15}" placeholder="e.g. 9876543210" required>
+          </div>
+
+          <div class="modal-row">
+            <label for="orderAddress">Complete Delivery Address <span class="required">*</span></label>
+            <input id="orderAddress" type="text" placeholder="House/Flat No., Street, Landmark, City, Pincode" required>
+          </div>
+
+          <!-- Payment Method & Delivery Charges Choice -->
+          <div class="modal-row">
+            <label>Payment Method &amp; Delivery Fee <span class="required">*</span></label>
+            <div class="payment-options">
+              <label class="payment-card selected" id="opt-razorpay" onclick="selectPaymentMethod('Razorpay');">
+                <input type="radio" name="paymentMethod" value="Razorpay" checked>
+                <div class="payment-info">
+                  <div class="payment-title">
+                    <span class="pay-icon">💳</span>
+                    <strong>Prepaid / Online (Razorpay)</strong>
+                    <span class="badge-tag gold" id="prepaidDeliveryBadge">Delivery: ₹39</span>
+                  </div>
+                  <div class="payment-desc">Pay via Google Pay, PhonePe, Paytm, UPI, Cards, or Netbanking.</div>
+                  <div class="payment-icons-row">
+                    <span class="mini-pay-tag">GPay</span>
+                    <span class="mini-pay-tag">PhonePe</span>
+                    <span class="mini-pay-tag">Paytm</span>
+                    <span class="mini-pay-tag">UPI</span>
+                    <span class="mini-pay-tag">Cards</span>
+                    <span class="save-tag" id="prepaidSaveTag">Save ₹20 on Delivery</span>
+                  </div>
+                </div>
+              </label>
+
+              <label class="payment-card" id="opt-cod" onclick="selectPaymentMethod('Cash on Delivery (COD)');">
+                <input type="radio" name="paymentMethod" value="Cash on Delivery (COD)">
+                <div class="payment-info">
+                  <div class="payment-title">
+                    <span class="pay-icon">💵</span>
+                    <strong>Cash on Delivery (COD)</strong>
+                    <span class="badge-tag" id="codDeliveryBadge">Delivery: ₹59</span>
+                  </div>
+                  <div class="payment-desc">Pay in cash when your order arrives at your doorstep.</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Live Price Breakdown in Modal -->
+          <div class="order-summary-box">
+            <div class="os-row">
+              <span>Items Subtotal</span>
+              <span id="modalSubtotal">₹0</span>
+            </div>
+            <div class="os-row">
+              <span>Delivery Charges</span>
+              <span id="modalDeliveryFee" class="delivery-fee-val">₹39</span>
+            </div>
+            <div class="os-divider"></div>
+            <div class="os-row grand-total-row">
+              <strong>Grand Total Amount</strong>
+              <strong id="modalGrandTotal" class="grand-total-val">₹0</strong>
+            </div>
+          </div>
+
+          <div class="modal-row">
+            <label for="orderNotes">Delivery Instructions (Optional)</label>
+            <textarea id="orderNotes" rows="2" placeholder="Any landmark, preferred delivery timing, etc."></textarea>
+          </div>
+
+          <div class="modal-row" style="display:none;">
+            <input id="orderStoreNumber" type="text" value="7042403063">
+          </div>
+
+          <div class="modal-actions">
+            <button type="submit" id="orderConfirm" class="btn btn-primary btn-full btn-glow">
+              <span id="orderBtnText">Pay via Razorpay ➔</span>
+            </button>
+            <button type="button" id="orderCancel" class="btn btn-ghost" onclick="closeOrderModal();">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- On-Site Order Confirmation Modal (Zero Redirects) -->
+    <div id="successModal" class="modal" aria-hidden="true">
+      <div class="modal-backdrop" id="successBackdrop" onclick="closeSuccessModal();"></div>
+      <div class="modal-panel success-panel">
+        <div class="success-icon-wrap" id="successIconWrap">
+          <div class="success-checkmark">✓</div>
+        </div>
+        <div class="order-id-pill" id="receiptOrderId">Order #MG-84291</div>
+        <h3 class="success-title" id="successTitle">Order Confirmed!</h3>
+        <p class="success-sub" id="successSub">Thank you! Your order has been placed. We'll pack and dispatch it within 24 hours.</p>
+
+        <div class="delivery-estimate-card">
+          <div class="estimate-icon">📦</div>
+          <div class="estimate-info">
+            <strong>Estimated Delivery: 2–4 Business Days</strong>
+            <p>You will receive SMS/WhatsApp tracking updates once dispatched.</p>
+          </div>
+        </div>
+
+        <div class="receipt-box">
+          <div class="receipt-row">
+            <span class="r-label">Payment Status</span>
+            <span class="r-val" id="receiptMethod">Prepaid (Razorpay)</span>
+          </div>
+          <div class="receipt-row" id="receiptPaymentIdRow">
+            <span class="r-label">Payment ID</span>
+            <span class="r-val" id="receiptPaymentId">pay_test123</span>
+          </div>
+          <div class="receipt-row">
+            <span class="r-label">Customer</span>
+            <span class="r-val" id="receiptCustomer">Priya Sharma</span>
+          </div>
+          <div class="receipt-row">
+            <span class="r-label">Delivery Address</span>
+            <span class="r-val" id="receiptAddress">Mumbai, Maharashtra</span>
+          </div>
+          <div class="receipt-divider"></div>
+          <div class="receipt-row">
+            <span class="r-label">Items Subtotal</span>
+            <span class="r-val" id="receiptSubtotal">₹899</span>
+          </div>
+          <div class="receipt-row">
+            <span class="r-label">Delivery Charges</span>
+            <span class="r-val" id="receiptDelivery">₹39</span>
+          </div>
+          <div class="receipt-row">
+            <span class="r-label">Grand Total</span>
+            <span class="r-val highlight" id="receiptAmount">₹938</span>
+          </div>
+          <div class="receipt-divider"></div>
+          <div class="receipt-items-list" id="receiptItems">
+            <!-- Rendered via script.js -->
+          </div>
+        </div>
+
+        <div class="success-actions">
+          <button id="printReceiptBtn" class="btn btn-outline btn-full" onclick="window.print();">
+            <span>📄 Print / Save Order Receipt</span>
+          </button>
+          <button id="successCloseBtn" class="btn btn-primary btn-full" style="margin-top:0.65rem;" onclick="closeSuccessModal();">
+            <span>Continue Shopping ➔</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Luxury Footer -->
+    <footer class="site-footer">
+      <div class="container footer-container">
+        <div class="footer-brand-col">
+          <div class="brand-wrap">
+            <div class="logo-circle small">
+              <span class="logo-fallback-text">MG</span>
+            </div>
+            <div class="brand-text">
+              <span class="brand-name">Mine Glow</span>
+              <span class="brand-sub">ORGANICS</span>
+            </div>
+          </div>
+          <p class="footer-tagline">Harnessing the pure essence of cold-pressed botanicals for radiant, naturally healthy skin every morning.</p>
+          <div class="footer-guarantees">
+            <span>🌿 100% Certified Organic</span>
+            <span>🐰 Cruelty Free</span>
+            <span>🇮🇳 Made in India</span>
+          </div>
+        </div>
+
+        <div class="footer-links-col">
+          <h4>Explore</h4>
+          <a href="#hero">Home</a>
+          <a href="#products">Shop Radiance Collection</a>
+          <a href="#ingredients">Our Ingredients</a>
+          <a href="#ritual">The Night Ritual</a>
+          <a href="#testimonials">Customer Reviews</a>
+        </div>
+
+        <div class="footer-links-col">
+          <h4>Customer Care</h4>
+          <a href="#faq">Frequently Asked Questions</a>
+          <a href="https://wa.me/7042403063" target="_blank" rel="noopener">WhatsApp Support: +91 7042403063</a>
+          <a href="#">Shipping &amp; COD Policy</a>
+          <a href="#">Terms &amp; Privacy</a>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div class="container footer-bottom-inner">
+          <div>© 2026 Mine Glow Organics. All rights reserved.</div>
+          <div class="secure-badge">🔒 256-Bit SSL Encrypted &amp; WhatsApp Verified</div>
+        </div>
       </div>
     </footer>
 
-    <!-- Order confirmation modal -->
-    <div id="orderModal" class="modal" aria-hidden="true">
-      <div class="modal-panel">
-        <h3>Confirm your order</h3>
-        <div class="modal-row"><label>Name</label><input id="orderName" type="text" placeholder="Your name"></div>
-        <div class="modal-row"><label>Your phone</label><input id="orderPhone" type="tel" placeholder="e.g. 919876543210"></div>
-        <div class="modal-row"><label>Delivery address</label><input id="orderAddress" type="text" placeholder="House, street, city"></div>
-        <div class="modal-row"><label>Notes</label><textarea id="orderNotes" rows="3" placeholder="Any delivery notes (optional)"></textarea></div>
-        <div class="modal-row small"><label>Send to store WhatsApp number</label><input id="orderStoreNumber" type="text" placeholder="Store WhatsApp number (country code, no +)" value="PHONENUMBER"></div>
-        <div class="modal-actions"><button id="orderConfirm" class="add-btn">Send to WhatsApp</button><button id="orderCancel" class="add-btn ghost">Cancel</button></div>
-      </div>
-    </div>
     <script src="script.js"></script>
   </body>
 </html>
