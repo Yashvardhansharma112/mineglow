@@ -148,7 +148,7 @@ function serveStatic(request, response, pathname) {
   });
 }
 
-const server = http.createServer(async (request, response) => {
+async function handler(request, response) {
   const url = new URL(request.url, `http://${request.headers.host || 'localhost'}`);
   try {
     if (request.method === 'POST' && url.pathname === '/api/register') {
@@ -264,6 +264,10 @@ const server = http.createServer(async (request, response) => {
     console.error(error.message);
     return sendJson(response, 400, { error: error.message || 'Request failed' });
   }
-});
+}
 
-server.listen(PORT, () => console.log(`Mine Glow server running at http://localhost:${PORT}`));
+module.exports = handler;
+
+if (require.main === module) {
+  http.createServer(handler).listen(PORT, () => console.log(`Mine Glow server running at http://localhost:${PORT}`));
+}

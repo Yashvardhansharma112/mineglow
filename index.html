@@ -11,8 +11,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    <!-- Razorpay Checkout SDK -->
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <!-- Razorpay Checkout SDK loads only when prepaid checkout is started. -->
   </head>
   <body>
 
@@ -138,7 +137,10 @@
           <div class="hero-visual">
             <div class="hero-image-frame">
               <div class="image-spotlight"></div>
-              <img src="assets/03_box_and_jar.jpg" alt="Mine Glow Organics Night Cream Box and Jar" class="hero-main-img" id="heroPackshot">
+              <picture>
+                <source srcset="assets/03_box_and_jar.webp" type="image/webp">
+                <img src="assets/03_box_and_jar.jpg" alt="Mine Glow Organics Night Cream Box and Jar" class="hero-main-img" id="heroPackshot" fetchpriority="high" decoding="async">
+              </picture>
               
               <!-- Floating Feature Badges -->
               <div class="float-badge float-top-right">
@@ -231,7 +233,10 @@
             
             <div class="showcase-content">
               <div class="showcase-media-box">
-                <img id="showcaseMain" src="assets/01_front_product.jpg" alt="Mine Glow Organics Night Cream Texture" class="showcase-main-img">
+                <picture>
+                  <source srcset="assets/01_front_product.webp" type="image/webp">
+                  <img id="showcaseMain" src="assets/01_front_product.jpg" alt="Mine Glow Organics Night Cream Texture" class="showcase-main-img" loading="lazy" decoding="async">
+                </picture>
               </div>
               <div class="showcase-sidebar">
                 <div class="showcase-thumbs" id="showcaseThumbs">

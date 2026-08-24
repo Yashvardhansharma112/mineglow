@@ -10,6 +10,7 @@ const OWNER_NOTIFICATION_EMAIL = 'orders.mineglow@gmail.com';
 const FREE_SHIPPING_THRESHOLD = 999;
 const PREPAID_DELIVERY_FEE = 39;
 const COD_DELIVERY_FEE = 59;
+let razorpayLoader;
 
 const PRODUCTS = [
   {
@@ -136,7 +137,10 @@ function renderProducts() {
     card.innerHTML = `
       <div class="product-card-badge ${p.isFeatured ? 'gold' : ''}">${p.badge}</div>
       <div class="product-media">
-        <img src="${p.img}" alt="${p.name}" loading="lazy">
+        <picture>
+          <source srcset="${p.img.replace('.jpg', '.webp')}" type="image/webp">
+          <img src="${p.img}" alt="${p.name}" loading="lazy" decoding="async">
+        </picture>
       </div>
       <div class="product-body">
         <div class="product-header">
@@ -177,14 +181,18 @@ function renderShowcase() {
   thumbsContainer.innerHTML = '';
   SHOWCASE_IMAGES.forEach((item, index) => {
     const thumb = document.createElement('img');
-    thumb.src = item.src;
+    thumb.src = item.src.replace(/\.jpg$/, '.webp');
+    thumb.onerror = () => { thumb.src = item.src; };
     thumb.alt = item.title;
+    thumb.loading = 'lazy';
+    thumb.decoding = 'async';
     thumb.className = `thumb ${index === 0 ? 'active' : ''}`;
     
     thumb.addEventListener('click', () => {
       mainImg.style.opacity = '0.4';
       setTimeout(() => {
-        mainImg.src = item.src;
+        mainImg.src = item.src.replace(/\.jpg$/, '.webp');
+        mainImg.onerror = () => { mainImg.src = item.src; };
         mainImg.style.opacity = '1';
       }, 150);
 
@@ -314,7 +322,7 @@ function renderCart() {
     const node = document.createElement('div');
     node.className = 'cart-item';
     node.innerHTML = `
-      <img src="${item.img}" alt="${item.name}" class="cart-item-img">
+      <img src="${item.img.replace('.jpg', '.webp')}" alt="${item.name}" class="cart-item-img" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${item.img}'">
       <div class="cart-item-info">
         <div class="cart-item-title">${item.name}</div>
         <div class="cart-qty-ctrl">
@@ -561,7 +569,7 @@ async function initiateRazorpayCheckout(orderData) {
     orderData.grandTotal = serverOrder.grandTotal / 100;
     const itemsDescription = orderData.cart.map(i => `${i.name} (x${i.qty})`).join(', ');
 
-    if (typeof Razorpay === 'undefined') throw new Error('Razorpay Checkout could not load');
+    await loadRazorpay();
 
     const options = {
     key: serverOrder.keyId,
@@ -625,6 +633,20 @@ async function initiateRazorpayCheckout(orderData) {
     console.error('Unable to start Razorpay Checkout:', err);
     alert(err.message || 'Unable to start Razorpay Checkout. Please try again.');
   }
+}
+
+function loadRazorpay() {
+  if (typeof Razorpay !== 'undefined') return Promise.resolve();
+  if (razorpayLoader) return razorpayLoader;
+  razorpayLoader = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    script.onload = resolve;
+    script.onerror = () => reject(new Error('Razorpay Checkout could not load'));
+    document.head.appendChild(script);
+  });
+  return razorpayLoader;
 }
 
 async function verifyRazorpayPayment(response, orderData, confirmButton) {

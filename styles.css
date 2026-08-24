@@ -738,6 +738,12 @@ button, input, textarea {
   transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.product-media picture {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
 .product-card:hover .product-media img {
   transform: scale(1.06);
 }
