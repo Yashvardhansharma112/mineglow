@@ -86,7 +86,7 @@ From the project directory in PowerShell:
 npm install
 $env:RAZORPAY_KEY_ID = 'rzp_test_your_key_id'
 $env:RAZORPAY_KEY_SECRET = 'your_test_secret'
-npm start
+npm run dev
 ```
 
 Then open `http://localhost:5500/`. The Razorpay secret is read only by `backend.js` and is never sent to the browser.

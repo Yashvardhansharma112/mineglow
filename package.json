@@ -2,10 +2,8 @@
   "name": "mineglow-storefront",
   "version": "1.0.0",
   "private": true,
-  "main": "index.js",
   "scripts": {
-    "start": "node backend.js",
-    "vercel-build": "echo Vercel serverless build ready",
+    "dev": "node backend.js",
     "optimize-images": "node scripts/optimize-images.js",
     "import-logo": "node scripts/import-logo.js"
   },
