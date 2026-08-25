@@ -407,7 +407,7 @@ function welcomeEmailHtml(user) {
     <h2>Welcome to Mine Glow Organics, ${escapeEmailHtml(user.name)}! ✨</h2>
     <p>Your account has been created successfully.</p>
     <p>You can now sign in, browse our organic botanical night creams, and view your order history anytime.</p>
-    <p><a href="https://mineglow.vercel.app" style="background:#8B3A4F;color:#ffffff;padding:10px 20px;text-decoration:none;border-radius:6px;display:inline-block;margin-top:10px;">Visit Store ➔</a></p>
+    <p><a href="https://www.mineglow.in" style="background:#8B3A4F;color:#ffffff;padding:10px 20px;text-decoration:none;border-radius:6px;display:inline-block;margin-top:10px;">Visit Store ➔</a></p>
   `;
 }
 
