@@ -944,7 +944,18 @@ async function registerAccount(event) {
   event.preventDefault();
   const response = await fetch('/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: registerName.value, email: registerEmail.value, phone: registerPhone.value, password: registerPassword.value }) });
   const data = await response.json();
-  if (!response.ok) return alert(data.error);
+  if (!response.ok) {
+    if (response.status === 409) {
+      const existingEmail = registerEmail.value.trim().toLowerCase();
+      const loginEmailField = document.getElementById('loginEmail');
+      if (loginEmailField) loginEmailField.value = existingEmail;
+      alert('This email already has an account. Sign in below or use “Forgot password?” to reset it.');
+      document.getElementById('loginPassword')?.focus();
+    } else {
+      alert(data.error);
+    }
+    return;
+  }
   currentAccount = data.user;
   renderAccountPanel();
   refreshAccount();
