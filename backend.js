@@ -7,6 +7,9 @@ const { URL } = require('url');
 const PORT = Number(process.env.PORT || 5500);
 const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID || '';
 const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || '';
+const SUPABASE_URL = (process.env.SUPABASE_URL || '').replace(/\/$/, '');
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const USE_SUPABASE = Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY);
 const ROOT = __dirname;
 const FREE_SHIPPING_THRESHOLD = 99900;
 const PREPAID_DELIVERY_FEE = 3900;
@@ -57,16 +60,20 @@ function parseCookies(request) {
 
 function currentUser(request) {
   const session = sessions.get(parseCookies(request).mineglow_session);
-  return session ? store.users.find(user => user.id === session.userId) : null;
+  return session ? (session.user || store.users.find(user => user.id === session.userId)) : null;
+}
+
+function normalizeUser(user) {
+  return user && user.password_hash ? { ...user, passwordHash: user.password_hash } : user;
 }
 
 function publicUser(user) {
   return user ? { id: user.id, name: user.name, email: user.email, phone: user.phone } : null;
 }
 
-function setSession(response, userId) {
+function setSession(response, userId, user = null) {
   const token = crypto.randomBytes(32).toString('hex');
-  sessions.set(token, { userId, createdAt: Date.now() });
+  sessions.set(token, { userId, user, createdAt: Date.now() });
   response.setHeader('Set-Cookie', `mineglow_session=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=604800`);
 }
 
@@ -76,14 +83,48 @@ function requireUser(request, response) {
   return user;
 }
 
-function saveOrder(userId, order) {
+async function saveOrder(userId, order) {
   if (!userId) return;
+  if (USE_SUPABASE) return persistSupabaseOrder(userId, order);
   store.orders.push({ ...order, userId, status: order.status || 'Order received', createdAt: new Date().toISOString() });
   saveStore();
 }
 
 function hashToken(token) {
   return crypto.createHash('sha256').update(token).digest('hex');
+}
+
+async function supabaseRequest(table, options = {}) {
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+    ...options,
+    headers: {
+      apikey: SUPABASE_SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+      'Content-Type': 'application/json',
+      Prefer: options.method === 'POST' ? 'return=representation' : undefined,
+      ...(options.headers || {})
+    }
+  });
+  if (!response.ok) throw new Error(`Supabase request failed (${response.status})`);
+  return response.status === 204 ? null : response.json();
+}
+
+async function findSupabaseUser(filter) {
+  const rows = await supabaseRequest(`users?select=*&${filter}`);
+  return normalizeUser(rows[0] || null);
+}
+
+async function persistSupabaseOrder(userId, order) {
+  const rows = await supabaseRequest('orders', { method: 'POST', body: JSON.stringify({
+    user_id: userId, order_id: order.orderId, razorpay_order_id: order.razorpayOrderId || null,
+    razorpay_payment_id: order.paymentId || null, payment_method: order.paymentMethod,
+    status: order.status || 'Order received', subtotal: order.subtotal, delivery_fee: order.deliveryFee,
+    grand_total: order.grandTotal, name: order.name, phone: order.phone, address: order.address, notes: order.notes || null
+  }) });
+  const saved = rows[0];
+  await supabaseRequest('order_items', { method: 'POST', body: JSON.stringify(order.cart.map(item => ({
+    order_id: saved.id, product_id: item.id, product_name: item.name, price: item.price, quantity: item.qty
+  }))) });
 }
 
 function sendJson(response, status, body) {
@@ -158,33 +199,36 @@ async function handler(request, response) {
       const phone = String(data.phone || '').trim();
       const password = String(data.password || '');
       if (name.length < 2 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || (phone && !/^\+?[0-9]{10,15}$/.test(phone)) || password.length < 8) return sendJson(response, 400, { error: 'Enter a valid name, email, phone number, and password of at least 8 characters' });
-      if (store.users.some(user => user.email === email)) return sendJson(response, 409, { error: 'An account with this email already exists' });
+      if (USE_SUPABASE ? await findSupabaseUser(`email=eq.${encodeURIComponent(email)}`) : store.users.some(user => user.email === email)) return sendJson(response, 409, { error: 'An account with this email already exists' });
       const user = { id: crypto.randomUUID(), name, email, phone, passwordHash: await hashPassword(password) };
-      store.users.push(user);
-      saveStore();
-      setSession(response, user.id);
+      if (USE_SUPABASE) {
+        const rows = await supabaseRequest('users', { method: 'POST', body: JSON.stringify({ id: user.id, name, email, phone, password_hash: user.passwordHash }) });
+        user.id = rows[0].id;
+      } else { store.users.push(user); saveStore(); }
+      setSession(response, user.id, user);
       return sendJson(response, 201, { user: publicUser(user) });
     }
 
     if (request.method === 'POST' && url.pathname === '/api/login') {
       const data = await readJson(request);
       const email = String(data.email || '').trim().toLowerCase();
-      const user = store.users.find(item => item.email === email);
+      const user = USE_SUPABASE ? await findSupabaseUser(`email=eq.${encodeURIComponent(email)}`) : store.users.find(item => item.email === email);
       if (!user || !(await verifyPassword(String(data.password || ''), user.passwordHash))) return sendJson(response, 401, { error: 'Email or password is incorrect' });
-      setSession(response, user.id);
+      setSession(response, user.id, user);
       return sendJson(response, 200, { user: publicUser(user) });
     }
 
     if (request.method === 'POST' && url.pathname === '/api/forgot-password') {
       const data = await readJson(request);
       const email = String(data.email || '').trim().toLowerCase();
-      const user = store.users.find(item => item.email === email);
+      const user = USE_SUPABASE ? await findSupabaseUser(`email=eq.${encodeURIComponent(email)}`) : store.users.find(item => item.email === email);
       const responseBody = { message: 'If an account exists for that email, a reset link has been sent.' };
       if (user) {
         const token = crypto.randomBytes(32).toString('hex');
         user.resetTokenHash = hashToken(token);
         user.resetTokenExpires = Date.now() + 15 * 60 * 1000;
-        saveStore();
+        if (USE_SUPABASE) await supabaseRequest(`users?id=eq.${encodeURIComponent(user.id)}`, { method: 'PATCH', body: JSON.stringify({ reset_token_hash: user.resetTokenHash, reset_token_expires: new Date(user.resetTokenExpires).toISOString() }) });
+        else saveStore();
         const resetUrl = `http://localhost:${PORT}/?reset=${token}`;
         console.log(`Password reset link for ${email}: ${resetUrl}`);
         if (process.env.NODE_ENV !== 'production') responseBody.devResetUrl = resetUrl;
@@ -196,13 +240,14 @@ async function handler(request, response) {
       const data = await readJson(request);
       const token = String(data.token || '');
       const password = String(data.password || '');
-      const user = store.users.find(item => item.resetTokenHash === hashToken(token) && item.resetTokenExpires > Date.now());
+      const user = USE_SUPABASE ? await findSupabaseUser(`reset_token_hash=eq.${hashToken(token)}&reset_token_expires=gt.${encodeURIComponent(new Date().toISOString())}`) : store.users.find(item => item.resetTokenHash === hashToken(token) && item.resetTokenExpires > Date.now());
       if (!user || password.length < 8) return sendJson(response, 400, { error: 'This reset link is invalid or expired' });
       user.passwordHash = await hashPassword(password);
       delete user.resetTokenHash;
       delete user.resetTokenExpires;
-      saveStore();
-      setSession(response, user.id);
+      if (USE_SUPABASE) await supabaseRequest(`users?id=eq.${encodeURIComponent(user.id)}`, { method: 'PATCH', body: JSON.stringify({ password_hash: user.passwordHash, reset_token_hash: null, reset_token_expires: null }) });
+      else saveStore();
+      setSession(response, user.id, user);
       return sendJson(response, 200, { user: publicUser(user) });
     }
 
@@ -220,7 +265,7 @@ async function handler(request, response) {
     if (request.method === 'GET' && url.pathname === '/api/orders') {
       const user = requireUser(request, response);
       if (!user) return;
-      const orders = store.orders.filter(order => order.userId === user.id).map(({ userId, ...order }) => order).reverse();
+      const orders = USE_SUPABASE ? (await supabaseRequest(`orders?select=order_id,payment_method,status,grand_total,created_at&user_id=eq.${encodeURIComponent(user.id)}&order=created_at.desc`)).map(order => ({ orderId: order.order_id, paymentMethod: order.payment_method, status: order.status, grandTotal: order.grand_total, createdAt: order.created_at })) : store.orders.filter(order => order.userId === user.id).map(({ userId, ...order }) => order).reverse();
       return sendJson(response, 200, { orders });
     }
 
@@ -242,7 +287,7 @@ async function handler(request, response) {
       const data = await readJson(request);
       const totals = calculateOrder(data.items, 'Cash on Delivery (COD)');
       const orderId = `MG-${Date.now().toString().slice(-8)}`;
-      saveOrder(user.id, { orderId, paymentMethod: 'Cash on Delivery (COD)', ...totals, name: String(data.name || '').trim(), phone: String(data.phone || '').trim(), address: String(data.address || '').trim(), notes: String(data.notes || '').trim() });
+      await saveOrder(user.id, { orderId, paymentMethod: 'Cash on Delivery (COD)', ...totals, name: String(data.name || '').trim(), phone: String(data.phone || '').trim(), address: String(data.address || '').trim(), notes: String(data.notes || '').trim() });
       return sendJson(response, 200, { orderId, ...totals });
     }
 
@@ -257,7 +302,7 @@ async function handler(request, response) {
       if (!crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature))) return sendJson(response, 400, { error: 'Payment signature verification failed' });
       const totals = pendingOrders.get(orderId);
       pendingOrders.delete(orderId);
-      saveOrder(totals.userId, { orderId, paymentMethod: 'Razorpay', paymentId, ...totals });
+      await saveOrder(totals.userId, { orderId, paymentMethod: 'Razorpay', paymentId, ...totals });
       return sendJson(response, 200, { verified: true, paymentId, ...totals });
     }
 
