@@ -11,7 +11,7 @@ const ROOT = __dirname;
 const FREE_SHIPPING_THRESHOLD = 99900;
 const PREPAID_DELIVERY_FEE = 3900;
 const COD_DELIVERY_FEE = 5900;
-const DATA_DIR = path.join(ROOT, 'data');
+const DATA_DIR = process.env.VERCEL ? path.join('/tmp', 'mineglow-data') : path.join(ROOT, 'data');
 const DATA_FILE = path.join(DATA_DIR, 'store.json');
 const PRODUCTS = new Map([
   ['mg-15', { name: 'Night Cream — 15 g', price: 49900, img: 'assets/01_front_product.jpg' }],

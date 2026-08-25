@@ -93,7 +93,7 @@ Then open `http://localhost:5500/`. The Razorpay secret is read only by `backend
 
 GitHub Pages only hosts static files and cannot run the payment API. Deploy `backend.js` on a Node host such as Render, Railway, or a serverless platform, set `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET` there, and configure the frontend API base URL before production deployment.
 
-The server writes account and order data to `data/store.json`. Keep the `data/` directory private and use a managed database, persistent disk, HTTPS, rate limiting, and session storage appropriate for production traffic.
+The local fallback writes account and order data to `data/store.json`. On Vercel it uses `/tmp` only to avoid filesystem errors, but that storage is temporary and may disappear between invocations. Use the Supabase setup below before real customer use.
 
 Supabase setup
 
