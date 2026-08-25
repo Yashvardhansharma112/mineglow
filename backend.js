@@ -5,12 +5,12 @@ const path = require('path');
 const { URL } = require('url');
 
 const PORT = Number(process.env.PORT || 5500);
-const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID || '';
-const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || '';
+const RAZORPAY_KEY_ID = (process.env.RAZORPAY_KEY_ID || '').trim();
+const RAZORPAY_KEY_SECRET = (process.env.RAZORPAY_KEY_SECRET || '').trim();
 const SUPABASE_URL = (process.env.SUPABASE_URL || '').replace(/\/$/, '');
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const SUPABASE_SERVICE_ROLE_KEY = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
 const USE_SUPABASE = Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY);
-const SESSION_SECRET = process.env.SESSION_SECRET || (!process.env.VERCEL ? 'local-development-session-secret' : '');
+const SESSION_SECRET = (process.env.SESSION_SECRET || (!process.env.VERCEL ? 'local-development-session-secret' : '')).trim();
 const ROOT = __dirname;
 const FREE_SHIPPING_THRESHOLD = 99900;
 const PREPAID_DELIVERY_FEE = 3900;
@@ -201,6 +201,10 @@ function serveStatic(request, response, pathname) {
 async function handler(request, response) {
   const url = new URL(request.url, `http://${request.headers.host || 'localhost'}`);
   try {
+    if (request.method === 'GET' && url.pathname === '/api/health') {
+      return sendJson(response, 200, { ok: true, razorpayConfigured: Boolean(RAZORPAY_KEY_ID && RAZORPAY_KEY_SECRET), supabaseConfigured: USE_SUPABASE, sessionConfigured: Boolean(SESSION_SECRET) });
+    }
+
     if (request.method === 'POST' && url.pathname === '/api/register') {
       if (!SESSION_SECRET) return sendJson(response, 503, { error: 'Session security is not configured' });
       const data = await readJson(request);

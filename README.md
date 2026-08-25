@@ -103,4 +103,6 @@ Supabase setup
 4. Keep the service role key server-only. Do not add it to `index.html`, `script.js`, GitHub, or client-side Supabase code.
 5. Add `SESSION_SECRET` with a long random value and keep it stable across deployments so signed-in sessions remain valid.
 
+Use the exact Razorpay variable names `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET`; names such as `key_id` and `key_secret` are not read by the backend. After redeploying, open `/api/health` to confirm `razorpayConfigured` is `true` without exposing either credential.
+
 The service-role key bypasses Row Level Security and must only be used by the backend. When both Supabase variables are configured, the backend uses Supabase for accounts, password resets, orders, and order history. The JSON store remains only as a local fallback.
