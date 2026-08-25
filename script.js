@@ -238,6 +238,17 @@ function addToCart(id) {
   saveCart();
   renderCart();
   showToast(`✨ ${product.name} added to your bag`);
+
+  // Meta Pixel Event Tracking: AddToCart
+  if (typeof fbq === 'function') {
+    fbq('track', 'AddToCart', {
+      content_name: product.name,
+      content_ids: [product.id],
+      content_type: 'product',
+      value: product.price,
+      currency: 'INR'
+    });
+  }
 }
 
 function changeQty(id, delta) {
@@ -396,6 +407,17 @@ function openOrderModal() {
   if (modal) {
     modal.classList.add('open');
     modal.setAttribute('aria-hidden', 'false');
+  }
+
+  // Meta Pixel Event Tracking: InitiateCheckout
+  if (typeof fbq === 'function') {
+    fbq('track', 'InitiateCheckout', {
+      content_ids: cart.map(i => i.id),
+      content_type: 'product',
+      num_items: cart.reduce((sum, i) => sum + i.qty, 0),
+      value: getSubtotal(),
+      currency: 'INR'
+    });
   }
 }
 
@@ -804,6 +826,23 @@ function onOrderPlacedSuccess(paymentId, orderData) {
   }
 
   showToast(`🎉 Order #${orderData.orderId} Confirmed!`);
+
+  // Meta Pixel Event Tracking: Purchase (Crucial for Meta Sales Ads Conversion Tracking)
+  if (typeof fbq === 'function') {
+    fbq('track', 'Purchase', {
+      value: orderData.grandTotal,
+      currency: 'INR',
+      content_type: 'product',
+      content_ids: orderData.cart.map(i => i.id),
+      contents: orderData.cart.map(i => ({
+        id: i.id,
+        quantity: i.qty,
+        item_price: i.price
+      })),
+      num_items: orderData.cart.reduce((sum, i) => sum + i.qty, 0),
+      order_id: orderData.orderId
+    });
+  }
 }
 
 // ==========================================================================
