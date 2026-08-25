@@ -94,3 +94,12 @@ Then open `http://localhost:5500/`. The Razorpay secret is read only by `backend
 GitHub Pages only hosts static files and cannot run the payment API. Deploy `backend.js` on a Node host such as Render, Railway, or a serverless platform, set `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET` there, and configure the frontend API base URL before production deployment.
 
 The server writes account and order data to `data/store.json`. Keep the `data/` directory private and use a managed database, persistent disk, HTTPS, rate limiting, and session storage appropriate for production traffic.
+
+Supabase setup
+
+1. Create a project at Supabase and open the SQL Editor.
+2. Run `supabase-schema.sql`.
+3. Copy the project URL and **service role key** into local environment variables or Vercel environment variables as `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`.
+4. Keep the service role key server-only. Do not add it to `index.html`, `script.js`, GitHub, or client-side Supabase code.
+
+The service-role key bypasses Row Level Security and must only be used by the backend. The current JSON store remains a local fallback; Supabase integration should be enabled before production account/order data is collected.
