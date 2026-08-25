@@ -8,7 +8,7 @@ const OWNER_NOTIFICATION_EMAIL = 'gauravsharma2000gk@gmail.com';
 
 // 🚚 Delivery Fee Configuration:
 const FREE_SHIPPING_THRESHOLD = 999;
-const PREPAID_DELIVERY_FEE = 39;
+const PREPAID_DELIVERY_FEE = 0;
 const COD_DELIVERY_FEE = 59;
 let razorpayLoader;
 
@@ -17,12 +17,12 @@ const PRODUCTS = [
     id: 'mg-15',
     name: 'Night Cream — 15 g',
     size: '15 g (Travel Size)',
-    price: 499.00,
-    originalPrice: 599.00,
+    price: 10.00,
+    originalPrice: 499.00,
     img: 'assets/01_front_product.jpg',
-    desc: 'Pure botanical night elixir in a travel-friendly jar. Perfect 2-week trial size.',
+    desc: 'Pure botanical night elixir in a travel-friendly jar. Special ₹10 test price.',
     rating: 4.8,
-    badge: 'Trial & Travel',
+    badge: '₹10 Test Price',
     isFeatured: false
   },
   {
