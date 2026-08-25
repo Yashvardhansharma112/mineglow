@@ -226,20 +226,23 @@ async function handler(request, response) {
 
     if (request.method === 'POST' && url.pathname === '/api/create-order') {
       if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) return sendJson(response, 503, { error: 'Razorpay server configuration is missing' });
+      const user = requireUser(request, response);
+      if (!user) return;
       const data = await readJson(request);
       if (data.paymentMethod !== 'Razorpay') return sendJson(response, 400, { error: 'Unsupported payment method' });
       const totals = calculateOrder(data.items, data.paymentMethod);
       const order = await createRazorpayOrder(totals.grandTotal, `mg_${Date.now()}`);
-      pendingOrders.set(order.id, { ...totals, userId: currentUser(request)?.id || null, name: String(data.name || '').trim(), phone: String(data.phone || '').trim(), address: String(data.address || '').trim(), notes: String(data.notes || '').trim() });
+      pendingOrders.set(order.id, { ...totals, userId: user.id, name: String(data.name || '').trim(), phone: String(data.phone || '').trim(), address: String(data.address || '').trim(), notes: String(data.notes || '').trim() });
       return sendJson(response, 200, { keyId: RAZORPAY_KEY_ID, razorpayOrderId: order.id, ...totals });
     }
 
     if (request.method === 'POST' && url.pathname === '/api/cod-order') {
+      const user = requireUser(request, response);
+      if (!user) return;
       const data = await readJson(request);
       const totals = calculateOrder(data.items, 'Cash on Delivery (COD)');
       const orderId = `MG-${Date.now().toString().slice(-8)}`;
-      const user = currentUser(request);
-      saveOrder(user?.id, { orderId, paymentMethod: 'Cash on Delivery (COD)', ...totals, name: String(data.name || '').trim(), phone: String(data.phone || '').trim(), address: String(data.address || '').trim(), notes: String(data.notes || '').trim() });
+      saveOrder(user.id, { orderId, paymentMethod: 'Cash on Delivery (COD)', ...totals, name: String(data.name || '').trim(), phone: String(data.phone || '').trim(), address: String(data.address || '').trim(), notes: String(data.notes || '').trim() });
       return sendJson(response, 200, { orderId, ...totals });
     }
 

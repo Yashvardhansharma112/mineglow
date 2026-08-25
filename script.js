@@ -165,8 +165,16 @@ function renderProducts() {
 }
 
 function buyNow(id) {
+  if (!requireAccount()) return;
   addToCart(id);
   openOrderModal();
+}
+
+function requireAccount() {
+  if (currentAccount) return true;
+  showToast('Please sign in or create an account before shopping.');
+  openAccount();
+  return false;
 }
 
 // ==========================================================================
@@ -209,6 +217,7 @@ function renderShowcase() {
 // ==========================================================================
 
 function addToCart(id) {
+  if (!requireAccount()) return;
   const product = PRODUCTS.find(p => p.id === id);
   if (!product) return;
 
@@ -356,6 +365,7 @@ function renderCart() {
 // ==========================================================================
 
 function openOrderModal() {
+  if (!requireAccount()) return;
   if (cart.length === 0) {
     showToast('⚠️ Your bag is empty! Please add a cream first.');
     closeCart();
