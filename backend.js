@@ -13,7 +13,7 @@ const USE_SUPABASE = Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY);
 const SESSION_SECRET = (process.env.SESSION_SECRET || (!process.env.VERCEL ? 'local-development-session-secret' : '')).trim();
 const RESEND_API_KEY = (process.env.RESEND_API_KEY || '').trim();
 const EMAIL_FROM = (process.env.EMAIL_FROM || 'Mine Glow Organics <onboarding@resend.dev>').trim();
-const OWNER_EMAIL = 'gauravsharma2000gk@gmail.com';
+const OWNER_EMAIL = (process.env.OWNER_EMAIL || 'gauravsharma2000gk@gmail.com').trim();
 const ROOT = __dirname;
 const FREE_SHIPPING_THRESHOLD = 99900;
 const PREPAID_DELIVERY_FEE = 3900;
@@ -263,7 +263,7 @@ async function handler(request, response) {
         user.id = rows[0].id;
       } else { store.users.push(user); saveStore(); }
       setSession(response, user.id, user);
-      notifyRegistration(user).catch(error => console.warn(error.message));
+      try { await notifyRegistration(user); } catch (error) { console.warn('Registration email failed:', error.message); }
       return sendJson(response, 201, { user: publicUser(user) });
     }
 
@@ -347,7 +347,7 @@ async function handler(request, response) {
       const orderId = `MG-${Date.now().toString().slice(-8)}`;
       const savedOrder = { orderId, paymentMethod: 'Cash on Delivery (COD)', ...totals, email: user.email, name: String(data.name || '').trim(), phone: String(data.phone || '').trim(), address: String(data.address || '').trim(), notes: String(data.notes || '').trim() };
       await saveOrder(user.id, savedOrder);
-      notifyOrder(savedOrder).catch(error => console.warn(error.message));
+      try { await notifyOrder(savedOrder); } catch (error) { console.warn('Order email failed:', error.message); }
       return sendJson(response, 200, { orderId, ...totals });
     }
 
@@ -365,7 +365,7 @@ async function handler(request, response) {
       pendingOrders.delete(orderId);
       const savedOrder = { orderId, paymentMethod: 'Razorpay', paymentId, ...totals };
       await saveOrder(totals.userId, savedOrder);
-      notifyOrder(savedOrder).catch(error => console.warn(error.message));
+      try { await notifyOrder(savedOrder); } catch (error) { console.warn('Order email failed:', error.message); }
       return sendJson(response, 200, { verified: true, paymentId, ...totals });
     }
 
