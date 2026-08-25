@@ -4,7 +4,7 @@
 
 // 📬 Store Owner Notification Email:
 // Replace with the email address where you want to receive instant new order alerts.
-const OWNER_NOTIFICATION_EMAIL = 'orders.mineglow@gmail.com';
+const OWNER_NOTIFICATION_EMAIL = 'gauravsharma2000gk@gmail.com';
 
 // 🚚 Delivery Fee Configuration:
 const FREE_SHIPPING_THRESHOLD = 999;
@@ -375,10 +375,14 @@ function openOrderModal() {
 
   closeCart();
 
-  // Pre-fill customer details from localStorage
+  // Pre-fill customer details from localStorage and active account
   try {
     const saved = JSON.parse(localStorage.getItem('mineglow_customer') || '{}');
     if (saved.name) document.getElementById('orderName').value = saved.name;
+    const emailField = document.getElementById('orderEmail');
+    if (emailField) {
+      emailField.value = (currentAccount && currentAccount.email) || saved.email || '';
+    }
     if (saved.phone) document.getElementById('orderPhone').value = saved.phone;
     if (saved.address) document.getElementById('orderAddress').value = saved.address;
     if (saved.paymentMethod) {
@@ -485,6 +489,8 @@ function updatePaymentOptionUI() {
 
 function confirmOrderAndSend() {
   const name = (document.getElementById('orderName').value || '').trim();
+  const emailInput = document.getElementById('orderEmail');
+  const email = (emailInput ? emailInput.value : (currentAccount ? currentAccount.email : '')).trim();
   const phone = (document.getElementById('orderPhone').value || '').trim();
   const address = (document.getElementById('orderAddress').value || '').trim();
   const notes = (document.getElementById('orderNotes').value || '').trim();
@@ -492,6 +498,11 @@ function confirmOrderAndSend() {
   if (!name) {
     alert('Please enter your full name.');
     document.getElementById('orderName').focus();
+    return;
+  }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    alert('Please enter a valid email address to receive your order confirmation.');
+    if (emailInput) emailInput.focus();
     return;
   }
   if (!phone) {
@@ -515,7 +526,7 @@ function confirmOrderAndSend() {
 
   // Save info for returning customer
   try {
-    localStorage.setItem('mineglow_customer', JSON.stringify({ name, phone, address, paymentMethod }));
+    localStorage.setItem('mineglow_customer', JSON.stringify({ name, email, phone, address, paymentMethod }));
   } catch (e) {}
 
   const subtotal = getSubtotal();
@@ -526,7 +537,7 @@ function confirmOrderAndSend() {
   const orderData = {
     orderId,
     name,
-    email: currentAccount.email,
+    email,
     phone,
     address,
     notes,
@@ -566,6 +577,7 @@ async function initiateRazorpayCheckout(orderData) {
         items: orderData.cart.map(item => ({ id: item.id, qty: item.qty })),
         paymentMethod: 'Razorpay',
         name: orderData.name,
+        email: orderData.email,
         phone: orderData.phone,
         address: orderData.address,
         notes: orderData.notes
@@ -692,6 +704,7 @@ async function processCODOrder(orderData) {
       body: JSON.stringify({
         items: orderData.cart.map(item => ({ id: item.id, qty: item.qty })),
         name: orderData.name,
+        email: orderData.email,
         phone: orderData.phone,
         address: orderData.address,
         notes: orderData.notes
@@ -727,6 +740,9 @@ function onOrderPlacedSuccess(paymentId, orderData) {
   const isPrepaid = !!paymentId;
   orderData.paymentId = paymentId;
 
+  // Send background owner notification as auxiliary backup
+  sendBackgroundOwnerNotification(orderData).catch(() => {});
+
   // Configure the on-site confirmation screen.
   const orderIdEl = document.getElementById('receiptOrderId');
   if (orderIdEl) orderIdEl.textContent = `Order #${orderData.orderId}`;
@@ -737,9 +753,15 @@ function onOrderPlacedSuccess(paymentId, orderData) {
   const payIdRow = document.getElementById('receiptPaymentIdRow');
 
   if (titleEl) titleEl.textContent = 'Order Confirmed!';
-  if (subEl) subEl.textContent = isPrepaid 
-    ? 'Your payment was successful and your order has been received.' 
-    : 'Your Cash on Delivery order has been registered.';
+  if (subEl) {
+    const baseMsg = isPrepaid 
+      ? 'Your payment was successful and your order has been received.' 
+      : 'Your Cash on Delivery order has been registered.';
+    const emailNote = orderData.email 
+      ? `<br><span style="color:#8B3A4F;font-weight:600;">📧 Order confirmation & invoice sent to ${escapeHTML(orderData.email)}</span>`
+      : '';
+    subEl.innerHTML = `${baseMsg}${emailNote}`;
+  }
   
   if (methodEl) methodEl.textContent = isPrepaid ? 'Paid Online (Razorpay)' : 'Cash on Delivery (COD)';
 
@@ -754,7 +776,7 @@ function onOrderPlacedSuccess(paymentId, orderData) {
   }
 
   const custEl = document.getElementById('receiptCustomer');
-  if (custEl) custEl.textContent = `${orderData.name} (${orderData.phone})`;
+  if (custEl) custEl.textContent = `${orderData.name} (${orderData.phone}) • ${orderData.email || ''}`;
   
   const addrEl = document.getElementById('receiptAddress');
   if (addrEl) addrEl.textContent = orderData.address;

@@ -9,6 +9,8 @@
     "import-logo": "node scripts/import-logo.js"
   },
   "dependencies": {
+    "dotenv": "^17.4.2",
+    "nodemailer": "^9.0.5",
     "sharp": "^0.32.0"
   }
 }
