@@ -29,12 +29,12 @@ const EMAIL_FROM = (process.env.EMAIL_FROM || (SMTP_USER ? `Mine Glow Organics <
 
 const ROOT = __dirname;
 const FREE_SHIPPING_THRESHOLD = 99900;
-const PREPAID_DELIVERY_FEE = 0;
+const PREPAID_DELIVERY_FEE = 3900;
 const COD_DELIVERY_FEE = 5900;
 const DATA_DIR = process.env.VERCEL ? path.join('/tmp', 'mineglow-data') : path.join(ROOT, 'data');
 const DATA_FILE = path.join(DATA_DIR, 'store.json');
 const PRODUCTS = new Map([
-  ['mg-15', { name: 'Night Cream — 15 g', price: 1000, img: 'assets/01_front_product.jpg' }],
+  ['mg-15', { name: 'Night Cream — 15 g', price: 49900, img: 'assets/01_front_product.jpg' }],
   ['mg-30', { name: 'Night Cream — 30 g', price: 89900, img: 'assets/03_box_and_jar.jpg' }],
   ['mg-50', { name: 'Night Cream — 50 g', price: 134900, img: 'assets/04_candlelit_product.jpg' }]
 ]);
