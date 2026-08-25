@@ -102,7 +102,7 @@ Supabase setup
 3. Copy the project URL and **service role key** into local environment variables or Vercel environment variables as `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`.
 4. Keep the service role key server-only. Do not add it to `index.html`, `script.js`, GitHub, or client-side Supabase code.
 5. Add `SESSION_SECRET` with a long random value and keep it stable across deployments so signed-in sessions remain valid.
-6. Add `RESEND_API_KEY`, `EMAIL_FROM`, and optionally `OWNER_EMAIL` for registration and order email delivery. The default store owner recipient is `gauravsharma2000gk@gmail.com`. For production, verify your sending domain in Resend and use an address on that domain for `EMAIL_FROM`.
+6. Add `RESEND_API_KEY`, `EMAIL_FROM`, and optionally `OWNER_EMAIL` for registration and order email delivery. The default store owner recipient is `contact.mineglow@gmail.com`. For production, verify your sending domain in Resend and use an address on that domain for `EMAIL_FROM`.
 
 Use the exact Razorpay variable names `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET`; names such as `key_id` and `key_secret` are not read by the backend. After redeploying, open `/api/health` to confirm `razorpayConfigured` is `true` without exposing either credential.
 
