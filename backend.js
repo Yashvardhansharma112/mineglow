@@ -144,13 +144,20 @@ function escapeEmailHtml(value) {
 }
 
 async function sendEmail(to, subject, html) {
-  if (!RESEND_API_KEY || !to) return;
+  if (!RESEND_API_KEY || !to) {
+    if (!RESEND_API_KEY) console.warn('Email skipped: RESEND_API_KEY is not configured');
+    return false;
+  }
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ from: EMAIL_FROM, to: [to], subject, html })
   });
-  if (!response.ok) throw new Error(`Email delivery failed (${response.status})`);
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Email delivery failed (${response.status}): ${details}`);
+  }
+  return true;
 }
 
 function orderEmailHtml(order, recipientName) {
@@ -245,7 +252,7 @@ async function handler(request, response) {
   const url = new URL(request.url, `http://${request.headers.host || 'localhost'}`);
   try {
     if (request.method === 'GET' && url.pathname === '/api/health') {
-      return sendJson(response, 200, { ok: true, razorpayConfigured: Boolean(RAZORPAY_KEY_ID && RAZORPAY_KEY_SECRET), supabaseConfigured: USE_SUPABASE, sessionConfigured: Boolean(SESSION_SECRET), emailConfigured: Boolean(RESEND_API_KEY) });
+      return sendJson(response, 200, { ok: true, razorpayConfigured: Boolean(RAZORPAY_KEY_ID && RAZORPAY_KEY_SECRET), supabaseConfigured: USE_SUPABASE, sessionConfigured: Boolean(SESSION_SECRET), emailConfigured: Boolean(RESEND_API_KEY), emailSenderConfigured: Boolean(EMAIL_FROM), ownerEmailConfigured: Boolean(OWNER_EMAIL) });
     }
 
     if (request.method === 'POST' && url.pathname === '/api/register') {
