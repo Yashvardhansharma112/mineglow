@@ -10,6 +10,7 @@ const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || '';
 const SUPABASE_URL = (process.env.SUPABASE_URL || '').replace(/\/$/, '');
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const USE_SUPABASE = Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY);
+const SESSION_SECRET = process.env.SESSION_SECRET || (!process.env.VERCEL ? 'local-development-session-secret' : '');
 const ROOT = __dirname;
 const FREE_SHIPPING_THRESHOLD = 99900;
 const PREPAID_DELIVERY_FEE = 3900;
@@ -22,7 +23,6 @@ const PRODUCTS = new Map([
   ['mg-50', { name: 'Night Cream — 50 g', price: 134900, img: 'assets/04_candlelit_product.jpg' }]
 ]);
 const pendingOrders = new Map();
-const sessions = new Map();
 
 function loadStore() {
   try { return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')); }
@@ -58,9 +58,18 @@ function parseCookies(request) {
   }));
 }
 
-function currentUser(request) {
-  const session = sessions.get(parseCookies(request).mineglow_session);
-  return session ? (session.user || store.users.find(user => user.id === session.userId)) : null;
+async function currentUser(request) {
+  const token = parseCookies(request).mineglow_session;
+  if (!SESSION_SECRET || !token) return null;
+  const [encoded, signature] = token.split('.');
+  if (!encoded || !signature) return null;
+  const expected = crypto.createHmac('sha256', SESSION_SECRET).update(encoded).digest('base64url');
+  if (signature.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return null;
+  try {
+    const session = JSON.parse(Buffer.from(encoded, 'base64url').toString('utf8'));
+    if (!session.userId || session.expiresAt < Date.now()) return null;
+    return USE_SUPABASE ? await findSupabaseUser(`id=eq.${encodeURIComponent(session.userId)}`) : store.users.find(user => user.id === session.userId) || null;
+  } catch { return null; }
 }
 
 function normalizeUser(user) {
@@ -72,13 +81,13 @@ function publicUser(user) {
 }
 
 function setSession(response, userId, user = null) {
-  const token = crypto.randomBytes(32).toString('hex');
-  sessions.set(token, { userId, user, createdAt: Date.now() });
-  response.setHeader('Set-Cookie', `mineglow_session=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=604800`);
+  const encoded = Buffer.from(JSON.stringify({ userId, expiresAt: Date.now() + 604800000 })).toString('base64url');
+  const signature = crypto.createHmac('sha256', SESSION_SECRET).update(encoded).digest('base64url');
+  response.setHeader('Set-Cookie', `mineglow_session=${encoded}.${signature}; HttpOnly; SameSite=Lax; Path=/; Max-Age=604800${process.env.VERCEL ? '; Secure' : ''}`);
 }
 
-function requireUser(request, response) {
-  const user = currentUser(request);
+async function requireUser(request, response) {
+  const user = await currentUser(request);
   if (!user) { sendJson(response, 401, { error: 'Please sign in first' }); return null; }
   return user;
 }
@@ -193,6 +202,7 @@ async function handler(request, response) {
   const url = new URL(request.url, `http://${request.headers.host || 'localhost'}`);
   try {
     if (request.method === 'POST' && url.pathname === '/api/register') {
+      if (!SESSION_SECRET) return sendJson(response, 503, { error: 'Session security is not configured' });
       const data = await readJson(request);
       const name = String(data.name || '').trim();
       const email = String(data.email || '').trim().toLowerCase();
@@ -210,6 +220,7 @@ async function handler(request, response) {
     }
 
     if (request.method === 'POST' && url.pathname === '/api/login') {
+      if (!SESSION_SECRET) return sendJson(response, 503, { error: 'Session security is not configured' });
       const data = await readJson(request);
       const email = String(data.email || '').trim().toLowerCase();
       const user = USE_SUPABASE ? await findSupabaseUser(`email=eq.${encodeURIComponent(email)}`) : store.users.find(item => item.email === email);
@@ -252,18 +263,17 @@ async function handler(request, response) {
     }
 
     if (request.method === 'POST' && url.pathname === '/api/logout') {
-      sessions.delete(parseCookies(request).mineglow_session);
       response.setHeader('Set-Cookie', 'mineglow_session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0');
       return sendJson(response, 200, { loggedOut: true });
     }
 
     if (request.method === 'GET' && url.pathname === '/api/me') {
-      const user = currentUser(request);
+      const user = await currentUser(request);
       return sendJson(response, 200, { user: publicUser(user) });
     }
 
     if (request.method === 'GET' && url.pathname === '/api/orders') {
-      const user = requireUser(request, response);
+      const user = await requireUser(request, response);
       if (!user) return;
       const orders = USE_SUPABASE ? (await supabaseRequest(`orders?select=order_id,payment_method,status,grand_total,created_at&user_id=eq.${encodeURIComponent(user.id)}&order=created_at.desc`)).map(order => ({ orderId: order.order_id, paymentMethod: order.payment_method, status: order.status, grandTotal: order.grand_total, createdAt: order.created_at })) : store.orders.filter(order => order.userId === user.id).map(({ userId, ...order }) => order).reverse();
       return sendJson(response, 200, { orders });
@@ -271,7 +281,7 @@ async function handler(request, response) {
 
     if (request.method === 'POST' && url.pathname === '/api/create-order') {
       if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) return sendJson(response, 503, { error: 'Razorpay server configuration is missing' });
-      const user = requireUser(request, response);
+      const user = await requireUser(request, response);
       if (!user) return;
       const data = await readJson(request);
       if (data.paymentMethod !== 'Razorpay') return sendJson(response, 400, { error: 'Unsupported payment method' });
@@ -282,7 +292,7 @@ async function handler(request, response) {
     }
 
     if (request.method === 'POST' && url.pathname === '/api/cod-order') {
-      const user = requireUser(request, response);
+      const user = await requireUser(request, response);
       if (!user) return;
       const data = await readJson(request);
       const totals = calculateOrder(data.items, 'Cash on Delivery (COD)');
@@ -297,7 +307,8 @@ async function handler(request, response) {
       if (!orderId || !paymentId || !signature) return sendJson(response, 400, { error: 'Incomplete payment response' });
       if (!pendingOrders.has(orderId)) return sendJson(response, 400, { error: 'Unknown or expired payment order' });
       const pending = pendingOrders.get(orderId);
-      if (pending.userId && pending.userId !== currentUser(request)?.id) return sendJson(response, 403, { error: 'Payment session does not match order session' });
+      const user = await currentUser(request);
+      if (pending.userId && pending.userId !== user?.id) return sendJson(response, 403, { error: 'Payment session does not match order session' });
       const expected = crypto.createHmac('sha256', RAZORPAY_KEY_SECRET).update(`${orderId}|${paymentId}`).digest('hex');
       if (!crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature))) return sendJson(response, 400, { error: 'Payment signature verification failed' });
       const totals = pendingOrders.get(orderId);

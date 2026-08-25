@@ -101,5 +101,6 @@ Supabase setup
 2. Run `supabase-schema.sql`.
 3. Copy the project URL and **service role key** into local environment variables or Vercel environment variables as `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`.
 4. Keep the service role key server-only. Do not add it to `index.html`, `script.js`, GitHub, or client-side Supabase code.
+5. Add `SESSION_SECRET` with a long random value and keep it stable across deployments so signed-in sessions remain valid.
 
 The service-role key bypasses Row Level Security and must only be used by the backend. When both Supabase variables are configured, the backend uses Supabase for accounts, password resets, orders, and order history. The JSON store remains only as a local fallback.
