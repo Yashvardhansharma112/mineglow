@@ -526,6 +526,7 @@ function confirmOrderAndSend() {
   const orderData = {
     orderId,
     name,
+    email: currentAccount.email,
     phone,
     address,
     notes,
@@ -592,7 +593,7 @@ async function initiateRazorpayCheckout(orderData) {
     prefill: {
       name: orderData.name,
       contact: orderData.phone,
-      email: "order@mineglow.com"
+      email: orderData.email
     },
     notes: {
       orderId: orderData.orderId,
@@ -726,10 +727,7 @@ function onOrderPlacedSuccess(paymentId, orderData) {
   const isPrepaid = !!paymentId;
   orderData.paymentId = paymentId;
 
-  // 1. Send silent background notification to Store Owner Email & Endpoint
-  sendBackgroundOwnerNotification(orderData);
-
-  // 2. Configure On-Site Confirmation Screen
+  // Configure the on-site confirmation screen.
   const orderIdEl = document.getElementById('receiptOrderId');
   if (orderIdEl) orderIdEl.textContent = `Order #${orderData.orderId}`;
   

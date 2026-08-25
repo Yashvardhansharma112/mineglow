@@ -11,6 +11,9 @@ const SUPABASE_URL = (process.env.SUPABASE_URL || '').replace(/\/$/, '');
 const SUPABASE_SERVICE_ROLE_KEY = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
 const USE_SUPABASE = Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY);
 const SESSION_SECRET = (process.env.SESSION_SECRET || (!process.env.VERCEL ? 'local-development-session-secret' : '')).trim();
+const RESEND_API_KEY = (process.env.RESEND_API_KEY || '').trim();
+const EMAIL_FROM = (process.env.EMAIL_FROM || 'Mine Glow Organics <onboarding@resend.dev>').trim();
+const OWNER_EMAIL = 'gauravsharma2000gk@gmail.com';
 const ROOT = __dirname;
 const FREE_SHIPPING_THRESHOLD = 99900;
 const PREPAID_DELIVERY_FEE = 3900;
@@ -136,6 +139,46 @@ async function persistSupabaseOrder(userId, order) {
   }))) });
 }
 
+function escapeEmailHtml(value) {
+  return String(value ?? '').replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
+}
+
+async function sendEmail(to, subject, html) {
+  if (!RESEND_API_KEY || !to) return;
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ from: EMAIL_FROM, to: [to], subject, html })
+  });
+  if (!response.ok) throw new Error(`Email delivery failed (${response.status})`);
+}
+
+function orderEmailHtml(order, recipientName) {
+  const items = order.cart.map(item => `<li>${escapeEmailHtml(item.name)} x ${item.qty} - ${formatRupees(item.price * item.qty)}</li>`).join('');
+  return `<h2>Mine Glow Organics order ${escapeEmailHtml(order.orderId)}</h2><p>Hello ${escapeEmailHtml(recipientName)},</p><p>Your order has been received.</p><p><strong>Payment:</strong> ${escapeEmailHtml(order.paymentMethod)}<br><strong>Status:</strong> ${escapeEmailHtml(order.status || 'Order received')}<br><strong>Customer:</strong> ${escapeEmailHtml(order.name)}<br><strong>Phone:</strong> ${escapeEmailHtml(order.phone)}<br><strong>Address:</strong> ${escapeEmailHtml(order.address)}</p><h3>Items</h3><ul>${items}</ul><p><strong>Subtotal:</strong> ${formatRupees(order.subtotal)}<br><strong>Delivery:</strong> ${formatRupees(order.deliveryFee)}<br><strong>Total:</strong> ${formatRupees(order.grandTotal)}</p>`;
+}
+
+function formatRupees(paise) {
+  return `₹${(Number(paise || 0) / 100).toFixed(2)}`;
+}
+
+async function notifyRegistration(user) {
+  if (!RESEND_API_KEY) return;
+  const details = `<p><strong>Name:</strong> ${escapeEmailHtml(user.name)}<br><strong>Email:</strong> ${escapeEmailHtml(user.email)}<br><strong>Phone:</strong> ${escapeEmailHtml(user.phone || 'Not provided')}</p>`;
+  await Promise.all([
+    sendEmail(user.email, 'Welcome to Mine Glow Organics', `<h2>Welcome, ${escapeEmailHtml(user.name)}!</h2><p>Your Mine Glow Organics account has been created successfully.</p><p>You can now sign in, shop, and view your order history from your account.</p>`),
+    sendEmail(OWNER_EMAIL, `New customer registration: ${escapeEmailHtml(user.name)}`, `<h2>New customer registration</h2>${details}`)
+  ]);
+}
+
+async function notifyOrder(order) {
+  if (!RESEND_API_KEY) return;
+  await Promise.all([
+    sendEmail(OWNER_EMAIL, `New order ${order.orderId}`, orderEmailHtml(order, 'Store owner')),
+    sendEmail(order.email, `Order confirmation ${order.orderId}`, orderEmailHtml(order, order.name))
+  ]);
+}
+
 function sendJson(response, status, body) {
   response.writeHead(status, {
     'Content-Type': 'application/json; charset=utf-8',
@@ -202,7 +245,7 @@ async function handler(request, response) {
   const url = new URL(request.url, `http://${request.headers.host || 'localhost'}`);
   try {
     if (request.method === 'GET' && url.pathname === '/api/health') {
-      return sendJson(response, 200, { ok: true, razorpayConfigured: Boolean(RAZORPAY_KEY_ID && RAZORPAY_KEY_SECRET), supabaseConfigured: USE_SUPABASE, sessionConfigured: Boolean(SESSION_SECRET) });
+      return sendJson(response, 200, { ok: true, razorpayConfigured: Boolean(RAZORPAY_KEY_ID && RAZORPAY_KEY_SECRET), supabaseConfigured: USE_SUPABASE, sessionConfigured: Boolean(SESSION_SECRET), emailConfigured: Boolean(RESEND_API_KEY) });
     }
 
     if (request.method === 'POST' && url.pathname === '/api/register') {
@@ -220,6 +263,7 @@ async function handler(request, response) {
         user.id = rows[0].id;
       } else { store.users.push(user); saveStore(); }
       setSession(response, user.id, user);
+      notifyRegistration(user).catch(error => console.warn(error.message));
       return sendJson(response, 201, { user: publicUser(user) });
     }
 
@@ -291,7 +335,7 @@ async function handler(request, response) {
       if (data.paymentMethod !== 'Razorpay') return sendJson(response, 400, { error: 'Unsupported payment method' });
       const totals = calculateOrder(data.items, data.paymentMethod);
       const order = await createRazorpayOrder(totals.grandTotal, `mg_${Date.now()}`);
-      pendingOrders.set(order.id, { ...totals, userId: user.id, name: String(data.name || '').trim(), phone: String(data.phone || '').trim(), address: String(data.address || '').trim(), notes: String(data.notes || '').trim() });
+      pendingOrders.set(order.id, { ...totals, userId: user.id, email: user.email, name: String(data.name || '').trim(), phone: String(data.phone || '').trim(), address: String(data.address || '').trim(), notes: String(data.notes || '').trim() });
       return sendJson(response, 200, { keyId: RAZORPAY_KEY_ID, razorpayOrderId: order.id, ...totals });
     }
 
@@ -301,7 +345,9 @@ async function handler(request, response) {
       const data = await readJson(request);
       const totals = calculateOrder(data.items, 'Cash on Delivery (COD)');
       const orderId = `MG-${Date.now().toString().slice(-8)}`;
-      await saveOrder(user.id, { orderId, paymentMethod: 'Cash on Delivery (COD)', ...totals, name: String(data.name || '').trim(), phone: String(data.phone || '').trim(), address: String(data.address || '').trim(), notes: String(data.notes || '').trim() });
+      const savedOrder = { orderId, paymentMethod: 'Cash on Delivery (COD)', ...totals, email: user.email, name: String(data.name || '').trim(), phone: String(data.phone || '').trim(), address: String(data.address || '').trim(), notes: String(data.notes || '').trim() };
+      await saveOrder(user.id, savedOrder);
+      notifyOrder(savedOrder).catch(error => console.warn(error.message));
       return sendJson(response, 200, { orderId, ...totals });
     }
 
@@ -317,7 +363,9 @@ async function handler(request, response) {
       if (!crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature))) return sendJson(response, 400, { error: 'Payment signature verification failed' });
       const totals = pendingOrders.get(orderId);
       pendingOrders.delete(orderId);
-      await saveOrder(totals.userId, { orderId, paymentMethod: 'Razorpay', paymentId, ...totals });
+      const savedOrder = { orderId, paymentMethod: 'Razorpay', paymentId, ...totals };
+      await saveOrder(totals.userId, savedOrder);
+      notifyOrder(savedOrder).catch(error => console.warn(error.message));
       return sendJson(response, 200, { verified: true, paymentId, ...totals });
     }
 
