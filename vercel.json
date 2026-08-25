@@ -1,10 +1,5 @@
 {
   "version": 2,
-  "functions": {
-    "index.js": {
-      "includeFiles": ["index.html", "styles.css", "script.js", "assets/**"]
-    }
-  },
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/[...path].js" },
     { "handle": "filesystem" },
